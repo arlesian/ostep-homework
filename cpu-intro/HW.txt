@@ -1,0 +1,51 @@
+Q1. stats for 5:100,5:100
+    cpu usage 100%, total cycle 10
+
+Q2. 4:100,1:0 stats
+    cpu usage 6/11, total cycle 11
+
+
+Q3. change order
+    cpu usage 6/7, IO usage 5/7, total cycle 7
+    -> run proc 4:100 while proc 1:0 is BLOCKED
+
+Q4. Q3 but with -S SWITCH_ON_END
+    cpu usage 6/11, total cycle 11, same as Q2
+
+Q5. Q3 but with -S SWITCH_ON_IO
+    cpu usage 6/7, IO usage 5/7, total cycle 7
+    same as Q3
+
+Q6. 3:0,5:100,5:100,5:100 with SWITCH_ON_IO and IO_RUN_LATER
+    cpu usage 21/31, IO usage 15/31, total cycle 31
+    -> when IO init, switch to next proc completely.
+    -> come back to proc0 only after proc123 are all finished
+
+Q7. Q6 but with IO_RUN_IMMEDIATE
+    cpu usage 21/21, IO usage 15/21, total cycle 21
+    -> running the proc that initiated IO again is smart, as it is 
+    probable that it also has more IO instructions
+
+Q8. randomly generated IO
+    3:10,5:50,5:10,5:50 IO_RUN_IMMEDIATE
+        -> (32, 40, 44) (72.73%, 90.91%)
+ 17        BLOCKED       BLOCKED        RUN:io       BLOCKED             1             3
+ 18*       BLOCKED       BLOCKED       BLOCKED   RUN:io_done             1             3
+ 19        BLOCKED       BLOCKED       BLOCKED       RUN:cpu             1             3
+ 20        BLOCKED       BLOCKED       BLOCKED        RUN:io             1             3
+ 21*   RUN:io_done       BLOCKED       BLOCKED       BLOCKED             1             3
+ 22*          DONE   RUN:io_done       BLOCKED       BLOCKED             1             2
+ 23*          DONE         READY   RUN:io_done       BLOCKED             1             1
+ 24           DONE         READY        RUN:io       BLOCKED             1             1
+ 25           DONE       RUN:cpu       BLOCKED       BLOCKED             1             2
+ 26*          DONE          DONE       BLOCKED   RUN:io_done             1             1
+ 27           DONE          DONE       BLOCKED        RUN:io             1             1
+ proc3 run io -> run proc0(21)
+ proc0 finish -> proc3 still BLOCKED -> run proc1(by SWITCH_ON_IO)(22)
+ why 23 24?
+ proc1 done -> come back to proc3(by IO_RUN_IMMEDIATE)(26)
+
+     3:10,5:50,5:10,5:50 IO_RUN_LATER
+        -> (32, 39, 41) (78.05%, 95.12%)
+
+./process-run.py -l 3:10,5:50,5:10,5:50 -S SWITCH_ON_IO -c -p -I IO_RUN_LATER
