@@ -44,8 +44,20 @@ Q8. randomly generated IO
  proc0 finish -> proc3 still BLOCKED -> run proc1(by SWITCH_ON_IO)(22)
  why 23 24?
  proc1 done -> come back to proc3(by IO_RUN_IMMEDIATE)(26)
+    => perfectly natural. proc2 completed IO at 22, thus at 23 proc2 is running
 
      3:10,5:50,5:10,5:50 IO_RUN_LATER
         -> (32, 39, 41) (78.05%, 95.12%)
 
-./process-run.py -l 3:10,5:50,5:10,5:50 -S SWITCH_ON_IO -c -p -I IO_RUN_LATER
+ 11*       BLOCKED         READY         READY   RUN:io_done             1             1
+ 12        BLOCKED         READY         READY        RUN:io             1             1
+ 13        BLOCKED       RUN:cpu         READY       BLOCKED             1             2
+ 14*   RUN:io_done         READY         READY       BLOCKED             1             1
+ 15         RUN:io         READY         READY       BLOCKED             1             1
+ why 14 runs proc0 and not proc1?
+    => because IO_RUN_IMMEDIATE
+
+
+    => all resolved
+    IO_RUN_IMMEDIATE means whenever IO is completed, that proc is run "immediately"
+    IO_RUN_LATER means that even if some proc's IO is finished, it doesnt run until its turn
