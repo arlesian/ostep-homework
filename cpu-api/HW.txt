@@ -1,0 +1,47 @@
+Q1.
+./fork.py -s 10
+a - b
+a - b - c
+a - b
+a - b
+  \ d
+a - b
+  \ d
+  \ e
+
+Q2.
+with fork percentage low
+    -> shallow tree. mostly 2 layer, luck 3 layers. small # siblings
+with fork percentage high
+    -> deep tree with lots of siblings
+
+Q3. ./fork.py -a 10 -t
+spawn a
+a forks b
+b exits
+a forks c
+c forks d
+d forks e
+a forks f
+d forks g
+c forks h
+d forks i
+i forks j
+
+Q4. ./fork.py -A a+b,b+c,c+d,c+e,c- : making orphans
+    default seems to be reparent to root, with -R flag, set reparent to local parent
+
+Q5. -F flag : ./fork.py -s 2345 -F
+a
+└── b
+├   └── e
+└── c
+    └── d
+        └── f
+
+Q6. -F and -t flag : is the answer exact?
+    -> if # remaining process < # total processes automatically not exact
+    -> also even if equal, the order can be permuted
+    -> (if diagram is drawn in FIFO style, the solution is exact iff up to one process in each layer has a child)
+
+    
